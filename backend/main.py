@@ -16,9 +16,11 @@ load_dotenv()
 # Get API key from environment variables
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    raise ValueError("OPENAI_API_KEY environment variable is required")
-
-print("OpenAI API key loaded from environment")
+    print("WARNING: OPENAI_API_KEY environment variable is not set!")
+    print("The API will start but question generation will not work.")
+    api_key = None
+else:
+    print("OpenAI API key loaded from environment")
 
 app = FastAPI(title="Quiz Generator API", version="1.0.0")
 
@@ -52,7 +54,7 @@ app.add_middleware(
 )
 
 # OpenAI client - Initialize after environment is loaded
-client = OpenAI(api_key=api_key)
+client = OpenAI(api_key=api_key) if api_key else None
 
 # Pydantic models
 class Question(BaseModel):
@@ -98,6 +100,10 @@ def extract_text_from_pdf(file_content: bytes) -> str:
 
 async def generate_questions_with_openai(text: str, num_questions: int = 10) -> List[Question]:
     """Generate quiz questions using OpenAI API."""
+    
+    # Check if OpenAI client is available
+    if not client:
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.")
     
     # Ensure text is not empty
     if not text or len(text.strip()) < 100:
