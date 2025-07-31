@@ -1,0 +1,4 @@
+@echo off
+cd /d "C:\Users\ramon\Projects\AI-app\backend"
+set OPENAI_API_KEY=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
+python main.py
