@@ -13,10 +13,12 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Set API key directly for testing
-api_key = "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"
+# Get API key from environment variables
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("OPENAI_API_KEY environment variable is required")
 
-print("OpenAI API key set directly in code for testing")
+print("OpenAI API key loaded from environment")
 
 app = FastAPI(title="Quiz Generator API", version="1.0.0")
 
