@@ -25,6 +25,8 @@ app = FastAPI(title="Quiz Generator API", version="1.0.0")
 # CORS middleware - Configure for production
 allowed_origins = [
     "http://localhost:3000",  # Local development
+    "https://localhost:3000", # Local development with HTTPS
+    "https://ai-powered-pdf-quiz-generator.vercel.app",  # Vercel production
 ]
 
 # Add production origins from environment variables if available
@@ -32,11 +34,20 @@ frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     allowed_origins.append(frontend_url)
 
+# For Railway deployment, also allow any localhost origin
+if os.getenv("RAILWAY_ENVIRONMENT"):
+    allowed_origins.extend([
+        "http://localhost:3000",
+        "https://localhost:3000",
+        "https://ai-powered-pdf-quiz-generator.vercel.app",
+        "*"  # Allow all origins in Railway for testing
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=allowed_origins if not os.getenv("RAILWAY_ENVIRONMENT") else ["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
