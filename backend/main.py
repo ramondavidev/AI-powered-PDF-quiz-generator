@@ -22,12 +22,21 @@ print("OpenAI API key loaded from environment")
 
 app = FastAPI(title="Quiz Generator API", version="1.0.0")
 
-# CORS middleware
+# CORS middleware - Configure for production
+allowed_origins = [
+    "http://localhost:3000",  # Local development
+]
+
+# Add production origins from environment variables if available
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3000"],  # Next.js dev server
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
