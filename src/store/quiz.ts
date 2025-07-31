@@ -35,6 +35,7 @@ export interface QuizState {
   answerQuestion: (answer: number) => void;
   nextQuestion: () => void;
   resetQuiz: () => void;
+  retryQuiz: () => void;
   setShowFeedback: (show: boolean) => void;
 }
 
@@ -119,6 +120,20 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       score: 0,
       showFeedback: false,
     }),
+
+  retryQuiz: () =>
+    set((state) => ({
+      questions: state.questions.map((q) => ({
+        ...q,
+        userAnswer: undefined,
+        isCorrect: undefined,
+      })),
+      currentQuestionIndex: 0,
+      isQuizActive: true,
+      isQuizCompleted: false,
+      score: 0,
+      showFeedback: false,
+    })),
 
   setShowFeedback: (show) => set({ showFeedback: show }),
 }));

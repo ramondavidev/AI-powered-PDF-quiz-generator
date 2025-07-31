@@ -12,13 +12,11 @@ import {
 import { useQuizStore } from "@/store/quiz";
 
 export default function ResultsView() {
-  const { questions, score, resetQuiz } = useQuizStore();
+  const { questions, score, resetQuiz, retryQuiz } = useQuizStore();
   const [shareSuccess, setShareSuccess] = useState(false);
 
   const totalQuestions = questions.length;
   const percentage = Math.round((score / totalQuestions) * 100);
-  const correctAnswers = questions.filter((q) => q.isCorrect);
-  const incorrectAnswers = questions.filter((q) => !q.isCorrect);
 
   const getScoreColor = () => {
     if (percentage >= 80) return "text-green-600";
@@ -253,7 +251,7 @@ Score: ${percentage}%
       {/* Action Buttons */}
       <div className="flex justify-center space-x-4">
         <button
-          onClick={resetQuiz}
+          onClick={retryQuiz}
           className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
         >
           <RotateCcw className="w-4 h-4" />

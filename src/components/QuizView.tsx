@@ -184,16 +184,7 @@ export default function QuizView() {
         )}
       </div>
 
-      {/* Navigation */}
       <div className="flex justify-between items-center">
-        <button
-          onClick={() => window.history.back()}
-          className="text-gray-600 hover:text-gray-800 flex items-center"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Previous
-        </button>
-
         {!showFeedback ? (
           <button
             onClick={handleSubmitAnswer}
