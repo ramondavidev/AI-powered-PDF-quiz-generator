@@ -221,6 +221,11 @@ async def generate_questions_with_openai(text: str, num_questions: int = 10) -> 
         raise HTTPException(status_code=500, detail=f"Error generating questions: {str(e)}")
 
 # API endpoints
+@app.get("/")
+async def root():
+    """Root endpoint."""
+    return {"message": "AI Quiz Generator API", "status": "running", "version": "1.0.0"}
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
