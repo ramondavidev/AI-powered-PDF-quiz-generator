@@ -1,17 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   ArrowLeft,
   CheckCircle,
   XCircle,
   RotateCcw,
   Share,
+  Check,
 } from "lucide-react";
 import { useQuizStore } from "@/store/quiz";
 
 export default function ResultsView() {
   const { questions, score, resetQuiz } = useQuizStore();
+  const [shareSuccess, setShareSuccess] = useState(false);
 
   const totalQuestions = questions.length;
   const percentage = Math.round((score / totalQuestions) * 100);
@@ -21,13 +23,13 @@ export default function ResultsView() {
   const getScoreColor = () => {
     if (percentage >= 80) return "text-green-600";
     if (percentage >= 60) return "text-yellow-600";
-    return "text-red-600";
+    return "text-[#FF6258]";
   };
 
   const getProgressColor = () => {
-    if (percentage >= 80) return "bg-green-500";
+    if (percentage >= 80) return "bg-[#46CD94]";
     if (percentage >= 60) return "bg-yellow-500";
-    return "bg-red-500";
+    return "bg-[#FF6258]";
   };
 
   const getMessage = () => {
@@ -35,6 +37,46 @@ export default function ResultsView() {
       return "Great Work, you did very good on your quiz.";
     } else {
       return "Keep trying, you can improve your score!";
+    }
+  };
+
+  const handleShareResults = async () => {
+    const shareText = `🎯 Quiz Results: ${score}/${totalQuestions} (${percentage}%)
+    
+${getMessage()}
+
+Correct answers: ${score}
+Total questions: ${totalQuestions}
+Score: ${percentage}%
+
+#Quiz #AI #Learning`;
+
+    try {
+      // Try to use Web Share API if available (mobile devices)
+      if (navigator.share) {
+        await navigator.share({
+          title: "My Quiz Results",
+          text: shareText,
+        });
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 3000);
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareText);
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error("Error sharing results:", error);
+      // Fallback for older browsers
+      try {
+        await navigator.clipboard.writeText(shareText);
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 3000);
+      } catch (clipboardError) {
+        console.error("Clipboard error:", clipboardError);
+        alert("Unable to share results. Please try again.");
+      }
     }
   };
 
@@ -51,12 +93,9 @@ export default function ResultsView() {
             Back
           </button>
           <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-            📚 Mathematics Quiz
+            📚 Quiz
           </div>
         </div>
-        <button className="text-purple-600 hover:text-purple-700 font-medium">
-          🔄 Upgrade
-        </button>
       </div>
 
       {/* Score Card */}
@@ -84,28 +123,53 @@ export default function ResultsView() {
 
           {/* Progress Bar */}
           <div className="w-full max-w-md mx-auto mb-6">
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-gray-200 rounded-full h-3 flex overflow-hidden">
               <div
-                className={`h-3 rounded-full transition-all duration-1000 ${getProgressColor()}`}
-                style={{ width: `${percentage}%` }}
+                className="h-3 bg-[#46CD94] transition-all duration-1000"
+                style={{ width: `${(score / totalQuestions) * 100}%` }}
+              />
+              <div
+                className="h-3 bg-[#FF6258] transition-all duration-1000"
+                style={{
+                  width: `${
+                    ((totalQuestions - score) / totalQuestions) * 100
+                  }%`,
+                }}
               />
             </div>
           </div>
 
           <div className="flex justify-center space-x-6 text-sm">
             <div className="flex items-center">
-              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+              <div className="w-3 h-3 bg-[#46CD94] rounded-full mr-2"></div>
               <span className="text-gray-600">Answered Correctly</span>
             </div>
             <div className="flex items-center">
-              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+              <div className="w-3 h-3 bg-[#FF6258] rounded-full mr-2"></div>
               <span className="text-gray-600">Missed answers</span>
             </div>
           </div>
 
-          <button className="mt-6 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto">
-            <Share className="w-4 h-4" />
-            <span>Share results</span>
+          <button
+            onClick={handleShareResults}
+            disabled={shareSuccess}
+            className={`mt-6 px-6 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 mx-auto ${
+              shareSuccess
+                ? "bg-green-600 text-white"
+                : "bg-purple-600 text-white hover:bg-purple-700"
+            }`}
+          >
+            {shareSuccess ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Results Shared!</span>
+              </>
+            ) : (
+              <>
+                <Share className="w-4 h-4" />
+                <span>Share results</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -126,7 +190,7 @@ export default function ResultsView() {
                   {question.isCorrect ? (
                     <CheckCircle className="w-5 h-5 text-green-600" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-600" />
+                    <XCircle className="w-5 h-5 text-[#FF6258]" />
                   )}
                 </div>
 
@@ -137,7 +201,7 @@ export default function ResultsView() {
                     </h3>
                     <span
                       className={`text-sm font-medium ${
-                        question.isCorrect ? "text-green-600" : "text-red-600"
+                        question.isCorrect ? "text-green-600" : "text-[#FF6258]"
                       }`}
                     >
                       {question.isCorrect ? "Correct Answer" : "Wrong Answer"}
@@ -170,7 +234,7 @@ export default function ResultsView() {
                               </span>
                             )}
                             {isUserAnswer && !isCorrect && (
-                              <span className="text-red-600 text-sm font-medium">
+                              <span className="text-[#FF6258] text-sm font-medium">
                                 Your Answer
                               </span>
                             )}

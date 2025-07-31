@@ -13,35 +13,6 @@ export default function QuestionEditor() {
     setEditingIndex(null);
   };
 
-  const handleAddOption = (questionIndex: number) => {
-    const question = questions[questionIndex];
-    const updatedQuestion = {
-      ...question,
-      options: [...question.options, "New Option"],
-    };
-    updateQuestion(questionIndex, updatedQuestion);
-  };
-
-  const handleRemoveOption = (questionIndex: number, optionIndex: number) => {
-    const question = questions[questionIndex];
-    if (question.options.length <= 2) {
-      alert("A question must have at least 2 options");
-      return;
-    }
-
-    const updatedQuestion = {
-      ...question,
-      options: question.options.filter((_, i) => i !== optionIndex),
-      correctAnswer:
-        question.correctAnswer > optionIndex
-          ? question.correctAnswer - 1
-          : question.correctAnswer === optionIndex
-          ? 0
-          : question.correctAnswer,
-    };
-    updateQuestion(questionIndex, updatedQuestion);
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -93,8 +64,6 @@ export default function QuestionEditor() {
                 questionIndex={questionIndex}
                 onSave={handleUpdateQuestion}
                 onCancel={() => setEditingIndex(null)}
-                onAddOption={handleAddOption}
-                onRemoveOption={handleRemoveOption}
               />
             ) : (
               <QuestionDisplay
@@ -154,17 +123,40 @@ function EditQuestionForm({
   questionIndex,
   onSave,
   onCancel,
-  onAddOption,
-  onRemoveOption,
 }: {
   question: Question;
   questionIndex: number;
   onSave: (index: number, question: Question) => void;
   onCancel: () => void;
-  onAddOption: (questionIndex: number) => void;
-  onRemoveOption: (questionIndex: number, optionIndex: number) => void;
 }) {
   const [editedQuestion, setEditedQuestion] = useState(question);
+
+  const handleAddOption = () => {
+    const updatedQuestion = {
+      ...editedQuestion,
+      options: [...editedQuestion.options, "New Option"],
+    };
+    setEditedQuestion(updatedQuestion);
+  };
+
+  const handleRemoveOption = (optionIndex: number) => {
+    if (editedQuestion.options.length <= 2) {
+      alert("A question must have at least 2 options");
+      return;
+    }
+
+    const updatedQuestion = {
+      ...editedQuestion,
+      options: editedQuestion.options.filter((_, i) => i !== optionIndex),
+      correctAnswer:
+        editedQuestion.correctAnswer > optionIndex
+          ? editedQuestion.correctAnswer - 1
+          : editedQuestion.correctAnswer === optionIndex
+          ? 0
+          : editedQuestion.correctAnswer,
+    };
+    setEditedQuestion(updatedQuestion);
+  };
 
   const handleSave = () => {
     if (!editedQuestion.question.trim()) {
@@ -232,7 +224,7 @@ function EditQuestionForm({
               />
               {editedQuestion.options.length > 2 && (
                 <button
-                  onClick={() => onRemoveOption(questionIndex, optionIndex)}
+                  onClick={() => handleRemoveOption(optionIndex)}
                   className="text-red-500 hover:text-red-700"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -244,7 +236,7 @@ function EditQuestionForm({
 
         {editedQuestion.options.length < 6 && (
           <button
-            onClick={() => onAddOption(questionIndex)}
+            onClick={handleAddOption}
             className="mt-2 flex items-center text-purple-600 hover:text-purple-700 text-sm"
           >
             <Plus className="w-4 h-4 mr-1" />

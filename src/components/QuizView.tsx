@@ -54,12 +54,9 @@ export default function QuizView() {
             Back
           </button>
           <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-            📚 Mathematics Quiz
+            📚 Quiz
           </div>
         </div>
-        <button className="text-purple-600 hover:text-purple-700 font-medium">
-          🔄 Upgrade
-        </button>
       </div>
 
       {/* Progress */}
