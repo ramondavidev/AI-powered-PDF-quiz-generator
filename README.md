@@ -121,7 +121,6 @@ If you're using VS Code, you can use the predefined tasks:
    ```
 
    ✅ Backend will be available at: http://localhost:8000
-   📖 API Documentation: http://localhost:8000/docs
 
 2. **Start the Frontend Development Server**
    ```bash
@@ -163,17 +162,33 @@ pip freeze           # List installed packages
    - Review the generated questions in the Question Editor
    - Edit questions, answers, or explanations if needed
    - Ensure questions meet your learning objectives
+   - **🔄 Auto-Save**: All edits are automatically saved to local storage
 
 4. **🎮 Take the Interactive Quiz**
 
    - Answer all questions at your own pace
    - Questions are presented one at a time for better focus
    - No time limits - learn at your own speed
+   - **💾 Progress Tracking**: Your quiz progress is automatically saved after each answer
 
 5. **📊 View Detailed Results**
    - See your overall score and performance breakdown
    - Review each question with correct/incorrect indicators
    - Learn from explanations for better understanding
+   - **📝 History**: Completed quizzes are saved to your local history (last 10 quizzes)
+
+### 🔄 Saved Progress Features
+
+The app automatically saves your work and progress using your browser's local storage:
+
+- **📱 Resume Anywhere**: If you accidentally close the browser or navigate away, your progress is preserved
+- **⚡ Instant Recovery**: Return to the app and you'll see notifications about saved progress
+- **📚 Quiz History**: Access your last 10 completed quizzes with scores and timestamps
+- **✏️ Edited Questions**: Modified questions are preserved between sessions
+- **🛡️ Data Safety**: Warning before leaving with unsaved progress
+- **🧹 Smart Cleanup**: Old data (24+ hours) is automatically cleaned up
+
+**To access saved data:** Look for the "View History" or "Resume Saved Progress" buttons in the interface, or check for automatic notifications when you return to the app.
 
 ## 📁 Project Structure
 
@@ -313,7 +328,7 @@ node --version  # Should be 18+
 - Try with a smaller PDF file first
 - Check if PDF is password-protected (not supported)
 
-## 🤝 Contributing
+<!-- ## 🤝 Contributing
 
 We welcome contributions! Here's how to get started:
 
@@ -351,7 +366,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - [ ] **Difficulty Levels**: Easy, medium, hard question generation
 - [ ] **Export Options**: PDF, Word, or text export of quizzes
 - [ ] **Collaborative Features**: Share quizzes with others
-- [ ] **Analytics**: Detailed learning analytics and insights
+- [ ] **Analytics**: Detailed learning analytics and insights -->
 
 ---
 
