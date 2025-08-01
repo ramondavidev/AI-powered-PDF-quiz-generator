@@ -276,7 +276,7 @@ curl -X POST \
 
 ## 🚨 Error Handling & Troubleshooting
 
-The application includes comprehensive error handling for common issues:
+The application includes comprehensive error handling for issues:
 
 ### File Upload Issues
 
@@ -288,87 +288,8 @@ The application includes comprehensive error handling for common issues:
 ### API Integration Issues
 
 - **OpenAI API key missing**: Ensure `OPENAI_API_KEY` is set in backend `.env`
-- **API rate limits**: OpenAI has usage limits for free accounts
 - **Network connectivity**: Check internet connection for API calls
-- **CORS errors**: Ensure frontend URL is properly configured in backend
 
-### Common Solutions
-
-**Backend won't start:**
-
-```bash
-# Check Python version
-python --version  # Should be 3.8+
-
-# Install missing dependencies
-cd backend
-pip install -r requirements.txt
-
-# Check environment variables
-python -c "import os; print(os.getenv('OPENAI_API_KEY'))"
-```
-
-**Frontend build errors:**
-
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Delete node_modules and reinstall
-rm -rf node_modules
-npm install
-
-# Check Node.js version
-node --version  # Should be 18+
-```
-
-**PDF processing fails:**
-
-- Ensure PDF contains selectable text (not scanned images)
-- Try with a smaller PDF file first
-- Check if PDF is password-protected (not supported)
-
-<!-- ## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** with proper commit messages
-4. **Add tests** if applicable
-5. **Ensure code quality**: Run linting and formatting
-6. **Submit a pull request** with a clear description
-
-### Development Guidelines
-
-- Follow TypeScript best practices
-- Use Tailwind CSS for styling
-- Write meaningful commit messages
-- Add comments for complex logic
-- Test your changes thoroughly
-
-## 📄 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-## 🙋‍♂️ Support & Community
-
-- **Issues**: [GitHub Issues](https://github.com/ramondavidev/AI-powered-PDF-quiz-generator/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/ramondavidev/AI-powered-PDF-quiz-generator/discussions)
-- **Email**: Open an issue for feature requests or bug reports
-
-## 🔮 Roadmap & Future Features
-
-- [ ] **Multiple AI Providers**: Support for Claude, Gemini, and other LLMs
-- [ ] **Question Types**: True/false, fill-in-the-blank, essay questions
-- [ ] **Batch Processing**: Upload multiple PDFs at once
-- [ ] **User Accounts**: Save quiz history and progress
-- [ ] **Difficulty Levels**: Easy, medium, hard question generation
-- [ ] **Export Options**: PDF, Word, or text export of quizzes
-- [ ] **Collaborative Features**: Share quizzes with others
-- [ ] **Analytics**: Detailed learning analytics and insights -->
-
----
 
 <div align="center">
 
