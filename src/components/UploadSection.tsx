@@ -82,9 +82,7 @@ export default function UploadSection({
         // 10MB limit
         if (onShowToast) {
           onShowToast(
-            `File size too large (${(file.size / (1024 * 1024)).toFixed(
-              1
-            )}MB). Please upload a file smaller than 10MB.`,
+            `File size too large. Please upload a file smaller than 10MB.`,
             "error",
             6000,
             "upload"
@@ -167,10 +165,7 @@ export default function UploadSection({
       let errorMessage = "File upload rejected";
 
       if (errors.some((error: any) => error.code === "file-too-large")) {
-        errorMessage = `File size too large (${(
-          file.size /
-          (1024 * 1024)
-        ).toFixed(1)}MB). Please upload a file smaller than 10MB.`;
+        errorMessage = `File size too large. Please upload a file smaller than 10MB.`;
       } else if (
         errors.some((error: any) => error.code === "file-invalid-type")
       ) {
