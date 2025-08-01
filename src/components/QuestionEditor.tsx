@@ -1,16 +1,35 @@
 "use client";
 
 import React, { useState } from "react";
-import { Edit2, Trash2, Plus, Play, ArrowLeft } from "lucide-react";
+import {
+  Edit2,
+  Trash2,
+  Plus,
+  Play,
+  ArrowLeft,
+  Save,
+  Check,
+} from "lucide-react";
 import { useQuizStore, Question } from "@/store/quiz";
 
 export default function QuestionEditor() {
-  const { questions, updateQuestion, startQuiz, resetQuiz } = useQuizStore();
+  const {
+    questions,
+    updateQuestion,
+    startQuiz,
+    backToUpload,
+    hasUnsavedProgress,
+  } = useQuizStore();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
 
   const handleUpdateQuestion = (index: number, updatedQuestion: Question) => {
     updateQuestion(index, updatedQuestion);
     setEditingIndex(null);
+
+    // Show saved indicator
+    setShowSavedIndicator(true);
+    setTimeout(() => setShowSavedIndicator(false), 2000);
   };
 
   return (
@@ -19,15 +38,23 @@ export default function QuestionEditor() {
       <div className="flex items-center justify-between">
         <div>
           <button
-            onClick={resetQuiz}
+            onClick={backToUpload}
             className="flex items-center text-gray-600 hover:text-gray-800 mb-2"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
           </button>
-          <h2 className="text-2xl font-bold text-gray-800">
-            Review & Edit Questions
-          </h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Review & Edit Questions
+            </h2>
+            {showSavedIndicator && (
+              <div className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm animate-fade-in">
+                <Check className="w-4 h-4 mr-1" />
+                Saved to local storage
+              </div>
+            )}
+          </div>
         </div>
         <button
           onClick={startQuiz}

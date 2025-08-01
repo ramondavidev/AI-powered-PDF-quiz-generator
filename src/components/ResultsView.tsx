@@ -12,7 +12,7 @@ import {
 import { useQuizStore } from "@/store/quiz";
 
 export default function ResultsView() {
-  const { questions, score, resetQuiz, retryQuiz } = useQuizStore();
+  const { questions, score, backToUpload, retryQuiz } = useQuizStore();
   const [shareSuccess, setShareSuccess] = useState(false);
 
   const totalQuestions = questions.length;
@@ -31,7 +31,7 @@ export default function ResultsView() {
   };
 
   const getMessage = () => {
-    if (score > 7) {
+    if (score >= 7) {
       return "Great Work, you did very good on your quiz.";
     } else {
       return "Keep trying, you can improve your score!";
@@ -84,7 +84,7 @@ Score: ${percentage}%
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center">
           <button
-            onClick={resetQuiz}
+            onClick={backToUpload}
             className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
@@ -259,7 +259,7 @@ Score: ${percentage}%
         </button>
 
         <button
-          onClick={resetQuiz}
+          onClick={backToUpload}
           className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200"
         >
           <span>New Quiz</span>

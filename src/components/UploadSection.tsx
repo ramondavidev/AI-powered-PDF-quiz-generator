@@ -1,31 +1,95 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
-import { AlertCircle, FileText, Upload, Zap } from "lucide-react";
+import {
+  AlertCircle,
+  FileText,
+  Upload,
+  Zap,
+  Clock,
+  History,
+} from "lucide-react";
 import { useQuizStore } from "@/store/quiz";
 import { useGenerateQuestions } from "@/hooks/useApi";
 import { sampleQuestions } from "@/data/sampleQuestions";
+import SavedProgressManager from "./SavedProgressManager";
+import {
+  loadEditedQuestions,
+  loadQuizProgress,
+  isStorageDataStale,
+} from "@/utils/localStorage";
 import pdfIcon from "@/assets/icons/pdf icon.svg";
 
-export default function UploadSection() {
-  const { setUploadedFile, setIsProcessing, setQuestions } = useQuizStore();
-  const generateQuestions = useGenerateQuestions();
+interface UploadSectionProps {
+  onShowToast?: (
+    message: string,
+    type: "success" | "error" | "info",
+    duration?: number,
+    category?: string
+  ) => void;
+}
 
+export default function UploadSection({
+  onShowToast,
+}: UploadSectionProps = {}) {
+  const { setUploadedFile, setIsProcessing, setQuestions, loadProgress } =
+    useQuizStore();
+  const generateQuestions = useGenerateQuestions();
+  const [showSavedProgress, setShowSavedProgress] = useState(false);
+  const [hasSavedData, setHasSavedData] = useState(false);
+
+  // Check for saved data on component mount
+  useEffect(() => {
+    const checkSavedData = () => {
+      const savedQuestions = loadEditedQuestions();
+      const savedProgress = loadQuizProgress();
+
+      // Check if the data is not stale (older than 24 hours)
+      const hasValidQuestions =
+        savedQuestions && !isStorageDataStale(savedQuestions.timestamp, 24);
+      const hasValidProgress =
+        savedProgress && !isStorageDataStale(savedProgress.timestamp, 24);
+
+      setHasSavedData(!!(hasValidQuestions || hasValidProgress));
+    };
+
+    checkSavedData();
+
+    // Check again when the component becomes visible (in case data was cleared elsewhere)
+    const interval = setInterval(checkSavedData, 5000); // Check every 5 seconds instead of 1 second
+    return () => clearInterval(interval);
+  }, []);
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
       if (!file) return;
 
       if (file.type !== "application/pdf") {
-        alert("Please upload a PDF file");
+        if (onShowToast) {
+          onShowToast(
+            "Please upload a PDF file only. Other file types are not supported.",
+            "error",
+            5000,
+            "upload"
+          );
+        }
         return;
       }
 
       if (file.size > 10 * 1024 * 1024) {
         // 10MB limit
-        alert("File size must be less than 10MB");
+        if (onShowToast) {
+          onShowToast(
+            `File size too large (${(file.size / (1024 * 1024)).toFixed(
+              1
+            )}MB). Please upload a file smaller than 10MB.`,
+            "error",
+            6000,
+            "upload"
+          );
+        }
         return;
       }
 
@@ -35,19 +99,40 @@ export default function UploadSection() {
       try {
         const result = await generateQuestions.mutateAsync(file);
         setQuestions(result.questions);
+
+        // Show success toast
+        if (onShowToast) {
+          onShowToast(
+            `PDF uploaded successfully! Generated ${result.questions.length} questions from "${file.name}"`,
+            "success",
+            5000,
+            "upload"
+          );
+        }
       } catch (error) {
         console.error("Error generating questions:", error);
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Failed to generate questions"
-        );
+        if (onShowToast) {
+          onShowToast(
+            error instanceof Error
+              ? error.message
+              : "Failed to generate questions. Please try again.",
+            "error",
+            6000,
+            "upload"
+          );
+        }
         setUploadedFile(null);
       } finally {
         setIsProcessing(false);
       }
     },
-    [setUploadedFile, setIsProcessing, setQuestions, generateQuestions]
+    [
+      setUploadedFile,
+      setIsProcessing,
+      setQuestions,
+      generateQuestions,
+      onShowToast,
+    ]
   );
 
   const handleDemoMode = () => {
@@ -58,20 +143,74 @@ export default function UploadSection() {
     setTimeout(() => {
       setQuestions(sampleQuestions);
       setIsProcessing(false);
+
+      // Show success toast
+      if (onShowToast) {
+        onShowToast(
+          `Demo mode activated! Generated ${sampleQuestions.length} sample questions`,
+          "success",
+          5000,
+          "upload"
+        );
+      }
     }, 2000);
   };
 
+  const onDropRejected = useCallback(
+    (fileRejections: any[]) => {
+      if (!onShowToast || fileRejections.length === 0) return;
+
+      const rejection = fileRejections[0];
+      const file = rejection.file;
+      const errors = rejection.errors;
+
+      let errorMessage = "File upload rejected";
+
+      if (errors.some((error: any) => error.code === "file-too-large")) {
+        errorMessage = `File size too large (${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(1)}MB). Please upload a file smaller than 10MB.`;
+      } else if (
+        errors.some((error: any) => error.code === "file-invalid-type")
+      ) {
+        errorMessage =
+          "Please upload a PDF file only. Other file types are not supported.";
+      } else if (errors.some((error: any) => error.code === "too-many-files")) {
+        errorMessage = "Please upload only one file at a time.";
+      }
+
+      onShowToast(errorMessage, "error", 6000, "upload");
+    },
+    [onShowToast]
+  );
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected,
     accept: {
       "application/pdf": [".pdf"],
     },
     multiple: false,
     maxSize: 10 * 1024 * 1024, // 10MB
+    maxFiles: 1,
   });
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Saved Progress Button */}
+      {hasSavedData && (
+        <div className="mb-6 text-center">
+          <button
+            onClick={() => setShowSavedProgress(true)}
+            className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition-all duration-200 border border-blue-300"
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            Resume Saved Progress
+          </button>
+        </div>
+      )}
+
       <div
         className={`border border-solid rounded-2xl p-4 bg-white ${
           isDragActive
@@ -143,15 +282,26 @@ export default function UploadSection() {
       </div>
 
       {/* Demo Mode Button */}
-      <div className="mt-6 text-center">
-        <button
-          onClick={handleDemoMode}
-          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          <Zap className="w-5 h-5 mr-2" />
-          Try Demo (No PDF Required)
-        </button>
-        <p className="text-sm text-gray-500 mt-2">
+      <div className="mt-6 text-center space-y-4">
+        <div className="flex justify-center space-x-4">
+          {/* <button
+            onClick={handleDemoMode}
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            <Zap className="w-5 h-5 mr-2" />
+            Try Demo (No PDF Required)
+          </button> */}
+
+          <button
+            onClick={() => setShowSavedProgress(true)}
+            className="inline-flex items-center px-4 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200 border border-gray-300"
+          >
+            <History className="w-4 h-4 mr-2" />
+            View History
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-500">
           Experience the full quiz flow with sample questions
         </p>
       </div>
@@ -168,6 +318,12 @@ export default function UploadSection() {
           </div>
         </div>
       ) : null}
+
+      {/* Saved Progress Manager Modal */}
+      <SavedProgressManager
+        isOpen={showSavedProgress}
+        onClose={() => setShowSavedProgress(false)}
+      />
     </div>
   );
 }

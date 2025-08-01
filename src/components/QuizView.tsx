@@ -1,7 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle, XCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  XCircle,
+  Save,
+} from "lucide-react";
 import { useQuizStore } from "@/store/quiz";
 
 export default function QuizView() {
@@ -12,9 +18,21 @@ export default function QuizView() {
     nextQuestion,
     showFeedback,
     resetQuiz,
+    hasUnsavedProgress,
+    backToUpload,
   } = useQuizStore();
 
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showAutoSave, setShowAutoSave] = useState(false);
+
+  // Show auto-save indicator when progress is saved
+  useEffect(() => {
+    if (!hasUnsavedProgress && showFeedback) {
+      setShowAutoSave(true);
+      const timer = setTimeout(() => setShowAutoSave(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasUnsavedProgress, showFeedback]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -45,10 +63,10 @@ export default function QuizView() {
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
           <button
-            onClick={resetQuiz}
-            className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
+            onClick={backToUpload}
+            className="flex items-center text-gray-600 hover:text-gray-800"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
@@ -56,6 +74,12 @@ export default function QuizView() {
           <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
             📚 Quiz
           </div>
+          {showAutoSave && (
+            <div className="flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs animate-fade-in">
+              <Save className="w-3 h-3 mr-1" />
+              Auto-saved
+            </div>
+          )}
         </div>
       </div>
 

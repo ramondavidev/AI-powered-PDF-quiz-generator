@@ -1,11 +1,17 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { useQuizStore } from "@/store/quiz";
+import {
+  useAutoloadProgress,
+  useBeforeUnloadWarning,
+} from "@/hooks/usePersistence";
+import { useToast, ToastContainer } from "@/components/Toast";
 import UploadSection from "@/components/UploadSection";
 import QuestionEditor from "@/components/QuestionEditor";
 import QuizView from "@/components/QuizView";
 import ResultsView from "@/components/ResultsView";
+import Footer from "@/components/Footer";
 import VectorIcon from "@/assets/icons/Vector.svg";
 import Image from "next/image";
 import LoadingIcon from "@/assets/icons/loading.svg";
@@ -18,6 +24,29 @@ export default function Home() {
     uploadedFile,
     isProcessing,
   } = useQuizStore();
+
+  const { toasts, addToast, addUniqueToast, removeToast } = useToast();
+
+  // Create a memoized version of addToast to prevent unnecessary re-renders
+  const handleShowToast = useCallback(
+    (
+      message: string,
+      type: "success" | "error" | "info" = "info",
+      duration: number = 4000,
+      category?: string
+    ) => {
+      if (category) {
+        addUniqueToast(message, type, duration, category);
+      } else {
+        addToast(message, type, duration);
+      }
+    },
+    [addToast, addUniqueToast]
+  );
+
+  // Initialize persistence hooks - only show notifications once
+  // useAutoloadProgress((message, type) => handleShowToast(message, type, 6000));
+  useBeforeUnloadWarning();
 
   return (
     <main className="min-h-screen bg-[#F8F8F9]">
@@ -42,7 +71,7 @@ export default function Home() {
           {/* Main Content */}
           <div className="max-w-4xl mx-auto">
             {!uploadedFile && !isProcessing && questions.length === 0 && (
-              <UploadSection />
+              <UploadSection onShowToast={handleShowToast} />
             )}
 
             {(isProcessing || (uploadedFile && questions.length === 0)) && (
@@ -74,6 +103,12 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }
