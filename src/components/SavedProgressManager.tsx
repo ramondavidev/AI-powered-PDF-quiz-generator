@@ -84,7 +84,7 @@ export default function SavedProgressManager({
 
   const handleLoadSavedQuestions = () => {
     if (savedQuestions) {
-      setQuestions(savedQuestions.questions);
+      setQuestions(savedQuestions.questions, savedQuestions.fileName);
       onClose();
     }
   };

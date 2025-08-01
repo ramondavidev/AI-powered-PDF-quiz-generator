@@ -41,7 +41,7 @@ export interface QuizState {
   // Actions
   setUploadedFile: (file: File | null) => void;
   setIsProcessing: (processing: boolean) => void;
-  setQuestions: (questions: Question[]) => void;
+  setQuestions: (questions: Question[], fileName?: string) => void;
   updateQuestion: (index: number, question: Question) => void;
   startQuiz: () => void;
   answerQuestion: (answer: number) => void;
@@ -76,7 +76,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   setIsProcessing: (processing) => set({ isProcessing: processing }),
 
-  setQuestions: (questions) =>
+  setQuestions: (questions, fileName) =>
     set((state) => {
       const updatedQuestions = questions.map((q) => ({
         ...q,
@@ -84,14 +84,21 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         isCorrect: undefined,
       }));
 
-      // Save edited questions to localStorage
-      if (state.fileName) {
-        saveEditedQuestions(updatedQuestions, state.fileName);
+      const finalFileName = fileName || state.fileName;
+
+      if (finalFileName) {
+        saveEditedQuestions(updatedQuestions, finalFileName);
       }
 
       return {
         questions: updatedQuestions,
+        currentQuestionIndex: 0,
+        isQuizActive: false,
+        isQuizCompleted: false,
+        score: 0,
+        showFeedback: false,
         hasUnsavedProgress: false,
+        fileName: finalFileName,
       };
     }),
 
@@ -101,7 +108,6 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         i === index ? question : q
       );
 
-      // Save edited questions to localStorage
       if (state.fileName) {
         saveEditedQuestions(updatedQuestions, state.fileName);
       }
@@ -123,7 +129,6 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         hasUnsavedProgress: true,
       };
 
-      // Auto-save progress when starting quiz
       saveQuizProgress({ ...state, ...newState }, state.fileName);
 
       return newState;
@@ -147,8 +152,13 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         hasUnsavedProgress: true,
       };
 
-      // Auto-save progress after answering
-      saveQuizProgress({ ...state, ...newState }, state.fileName);
+      const finalState = { ...state, ...newState };
+      const isLastQuestion =
+        state.currentQuestionIndex === state.questions.length - 1;
+
+      if (!isLastQuestion) {
+        saveQuizProgress(finalState, state.fileName);
+      }
 
       return newState;
     }),
@@ -159,20 +169,28 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       const isCompleted = nextIndex >= state.questions.length;
 
       const newState = {
-        currentQuestionIndex: nextIndex,
+        currentQuestionIndex: isCompleted
+          ? state.currentQuestionIndex
+          : nextIndex,
         isQuizCompleted: isCompleted,
         isQuizActive: !isCompleted,
         showFeedback: false,
         hasUnsavedProgress: !isCompleted,
       };
 
-      // Auto-save progress
-      saveQuizProgress({ ...state, ...newState }, state.fileName);
+      const finalState = { ...state, ...newState };
 
-      // Save to history if completed
+      if (!isCompleted) {
+        saveQuizProgress(finalState, state.fileName);
+      }
+
       if (isCompleted && state.fileName) {
-        saveQuizToHistory({ ...state, ...newState }, state.fileName);
-        clearQuizProgress(); // Clear progress since quiz is completed
+        saveQuizToHistory(finalState, state.fileName);
+        clearQuizProgress();
+      } else if (isCompleted && !state.fileName) {
+        const fallbackFileName = "Unknown Quiz";
+        saveQuizToHistory(finalState, fallbackFileName);
+        clearQuizProgress();
       }
 
       return newState;
@@ -180,7 +198,6 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   resetQuiz: () =>
     set(() => {
-      // Clear all stored data when resetting
       clearQuizProgress();
       clearEditedQuestions();
 
@@ -214,7 +231,6 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         hasUnsavedProgress: true,
       };
 
-      // Clear previous progress and save new state
       clearQuizProgress();
       saveQuizProgress({ ...state, ...newState }, state.fileName);
 
@@ -222,13 +238,11 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     }),
 
   backToUpload: () => {
-    // Refresh the page like F5
     window.location.reload();
   },
 
   setShowFeedback: (show) => set({ showFeedback: show }),
 
-  // Persistence methods
   saveProgress: () => {
     const state = get();
     saveQuizProgress(state, state.fileName);
@@ -242,14 +256,12 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       return false;
     }
 
-    // Check if saved progress is not too old (24 hours)
     const isStale = Date.now() - savedProgress.timestamp > 24 * 60 * 60 * 1000;
     if (isStale) {
       clearQuizProgress();
       return false;
     }
 
-    // Create a dummy file object if we have a filename
     let uploadedFile = null;
     if (savedProgress.fileName) {
       uploadedFile = new File([], savedProgress.fileName, {
